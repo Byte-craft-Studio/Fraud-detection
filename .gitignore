@@ -218,3 +218,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# Project Specifics
+data/*.csv
+data/*.zip
+models/*.pkl
+models/*.onnx
+.vscode/
+pycache/

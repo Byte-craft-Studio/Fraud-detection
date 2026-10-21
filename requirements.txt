@@ -2,4 +2,5 @@ pandas
 numpy
 scikit-learn
 joblib
-streamlit
+streamlitfastapi
+uvicorn[standard]

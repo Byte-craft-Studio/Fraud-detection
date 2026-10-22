@@ -1,21 +1,66 @@
 import os
 import re
 import joblib
+import pandas as pd
 
-_MODEL = None
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "models", "sms_model.pkl")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MPESA_MODEL_PATH = os.path.join(BASE_DIR, "models", "model.pkl")
+SMS_MODEL_PATH = os.path.join(BASE_DIR, "models", "sms_model.pkl")
 
-def _load_model():
-    global _MODEL
-    if _MODEL is None:
-        if not os.path.exists(MODEL_PATH):
-            raise FileNotFoundError(
-                f"SMS model not found at {MODEL_PATH}. Get it from the AI pair."
-            )
-        _MODEL = joblib.load(MODEL_PATH)
-    return _MODEL
+_mpesa_model = None
+_sms_model = None
 
-# The trained model gives verdict + confidence but can't explain itself,
+
+def _load_mpesa_model():
+    global _mpesa_model
+    if _mpesa_model is None:
+        if not os.path.exists(MPESA_MODEL_PATH):
+            raise FileNotFoundError(f"M-Pesa model not found at {MPESA_MODEL_PATH}.")
+        _mpesa_model = joblib.load(MPESA_MODEL_PATH)
+    return _mpesa_model
+
+
+def _load_sms_model():
+    global _sms_model
+    if _sms_model is None:
+        if not os.path.exists(SMS_MODEL_PATH):
+            raise FileNotFoundError(f"SMS model not found at {SMS_MODEL_PATH}.")
+        _sms_model = joblib.load(SMS_MODEL_PATH)
+    return _sms_model
+
+
+def predict_mpesa(amount, old_bal_org, new_bal_org, old_bal_dest, new_bal_dest, tx_type):
+    model = _load_mpesa_model()
+    balance_error = old_bal_org - new_bal_org - amount
+
+    input_data = pd.DataFrame([{
+        "type": tx_type,
+        "amount": amount,
+        "oldbalanceOrg": old_bal_org,
+        "newbalanceOrig": new_bal_org,
+        "oldbalanceDest": old_bal_dest,
+        "newbalanceDest": new_bal_dest,
+        "balance_error_orig": balance_error,
+    }])
+    input_data = pd.get_dummies(input_data, columns=["type"], drop_first=True)
+
+    pred = model.predict(input_data)[0]
+    prob = model.predict_proba(input_data)[0]
+
+    if pred == 1:
+        return {
+            "verdict": "scam",
+            "confidence": round(float(prob[1]), 2),
+            "reasons": ["High transfer amount", f"Balance mismatch: {balance_error}"],
+        }
+    return {
+        "verdict": "safe",
+        "confidence": round(float(prob[0]), 2),
+        "reasons": ["No balance anomalies detected"],
+    }
+
+
+# The SMS model gives verdict + confidence but can't explain itself,
 # so we pair it with simple keyword checks to produce human-readable reasons.
 _REASON_RULES = [
     (re.compile(r"\bpin\b|m-?pesa pin", re.I), "Asks for your M-Pesa PIN"),
@@ -26,6 +71,7 @@ _REASON_RULES = [
     (re.compile(r"send.*money|deposit|fee|charge.*release", re.I), "Asks you to send money or pay a fee"),
 ]
 
+
 def _get_reasons(text, verdict):
     reasons = [label for pattern, label in _REASON_RULES if pattern.search(text)]
     if verdict == "safe" and not reasons:
@@ -34,9 +80,10 @@ def _get_reasons(text, verdict):
         return ["Flagged by the trained model based on message patterns"]
     return reasons
 
+
 def predict_sms(text):
     """Returns { verdict: 'safe'|'suspicious'|'scam', confidence: float, reasons: [str] }"""
-    model = _load_model()
+    model = _load_sms_model()
     pred = model.predict([text])[0]
     prob_scam = model.predict_proba([text])[0][1]
 
@@ -51,4 +98,5 @@ def predict_sms(text):
         "verdict": verdict,
         "confidence": round(float(confidence), 2),
         "reasons": _get_reasons(text, verdict),
-    }
+    }   
+ 

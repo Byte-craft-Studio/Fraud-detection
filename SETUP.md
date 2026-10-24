@@ -5,13 +5,12 @@ This covers everything needed to get the project running from a fresh clone, for
 ## Project structure
 
 Fraud-detection/
-├── frontend/ React + Vite + Tailwind UI (frontend pair)
-├── src/ Python ML code (AI pair): predict.py, train.py, train_sms.py
-├── models/ trained .pkl files (gitignored, not in git)
-├── app.py Streamlit app (optional/backup UI)
-├── api_server.py FastAPI wrapper exposing the models as JSON
-└── requirements.txt Python dependencies
-
+  frontend/           React + Vite + Tailwind UI (frontend pair)
+  src/                Python ML code (AI pair): predict.py, train.py, train_sms.py
+  models/              trained .pkl files (gitignored, not in git)
+  app.py               Streamlit app (optional/backup UI)
+  api_server.py        FastAPI wrapper exposing the models as JSON
+  requirements.txt     Python dependencies
 
 ## Prerequisites
 - Python 3.12+ and pip

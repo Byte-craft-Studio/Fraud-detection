@@ -1,4 +1,4 @@
-# AI-Powered M-Pesa Fraud Detection 🚨
+# Fraud Detection 🚨
 
 **Live Demo:** [LIVE_STREAMLIT_APP_URL]  
 **GitHub Repo:** [GITHUB_REPO_URL]  
@@ -21,7 +21,7 @@ Current fraud detection systems are **reactive** and **enterprise-focused**. Ord
 
 ## 💡 Our Solution
 
-We built a **lightweight, privacy-preserving AI web app** that predicts whether an M-Pesa transaction is likely to be fraudulent **before** it is finalized. Users enter transaction details (amount, sender/receiver balances) and the app instantly returns a fraud risk assessment.
+We built a **lightweight, privacy-preserving machine learning web app** that predicts whether a mobile money transaction is likely to be fraudulent **before** it is finalized. Users enter transaction details (amount, sender/receiver balances) and the app instantly returns a fraud risk assessment.
 
 **Key features:**
 - Real-time prediction using a trained Random Forest model.
@@ -49,4 +49,4 @@ We built a **lightweight, privacy-preserving AI web app** that predicts whether 
 1. **Clone the repo:**
    ```bash
    git clone [GITHUB_REPO_URL]
-   cd fraud-detection-mpesa
+   cd Fraud-detection

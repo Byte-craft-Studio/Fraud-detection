@@ -27,7 +27,7 @@ with tab2:
             st.warning("Please enter an SMS.")
         else:
             # Load the SMS model
-            model_path = "models/sms_model.pkl"
+            model_path = "sms_model.pkl"
             if os.path.exists(model_path):
                 sms_model = joblib.load(model_path)
                 

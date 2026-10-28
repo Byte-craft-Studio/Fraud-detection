@@ -1,8 +1,28 @@
+const getBaseUrl = () => {
+  const hostname = window.location.hostname;
+  return `http://${hostname === 'localhost' || hostname === '127.0.0.1' ? '172.32.117.194' : hostname}:8000`;
+};
+
+const API_BASE = getBaseUrl();
+
 export async function scanMessage(message) {
-  const res = await fetch("http://localhost:8000/scan", {
+  const res = await fetch(`${API_BASE}/scan`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ message }),
+  });
+  if (!res.ok) {
+    if (res.status === 503) throw new Error("model_not_loaded");
+    throw new Error("scan_failed");
+  }
+  return res.json();
+}
+
+export async function scanTransaction(transactionData) {
+  const res = await fetch(`${API_BASE}/scan-transaction`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(transactionData),
   });
   if (!res.ok) {
     if (res.status === 503) throw new Error("model_not_loaded");
@@ -20,4 +40,24 @@ export async function submitFeedback(entry) {
 
 export function getFeedbackLog() {
   return JSON.parse(localStorage.getItem("feedback_log") || "[]");
+}
+
+export function recordScan(result) {
+  const stats = JSON.parse(
+    localStorage.getItem("scan_stats") || '{"total":0,"scam":0,"suspicious":0,"safe":0}'
+  );
+  stats.total += 1;
+  stats[result.verdict] = (stats[result.verdict] || 0) + 1;
+  localStorage.setItem("scan_stats", JSON.stringify(stats));
+  return stats;
+}
+
+export function getStats() {
+  const stats = JSON.parse(
+    localStorage.getItem("scan_stats") || '{"total":0,"scam":0,"suspicious":0,"safe":0}'
+  );
+  const feedback = getFeedbackLog();
+  const correct = feedback.filter((f) => f.predicted === f.actual).length;
+  const accuracy = feedback.length > 0 ? Math.round((correct / feedback.length) * 100) : null;
+  return { ...stats, accuracy, corrections: feedback.length };
 }

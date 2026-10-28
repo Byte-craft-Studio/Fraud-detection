@@ -44,6 +44,10 @@ def predict_mpesa(amount, old_bal_org, new_bal_org, old_bal_dest, new_bal_dest, 
     }])
     input_data = pd.get_dummies(input_data, columns=["type"], drop_first=True)
 
+    # Align columns with what the model was trained on
+    if hasattr(model, "feature_names_in_"):
+        input_data = input_data.reindex(columns=model.feature_names_in_, fill_value=0)
+
     pred = model.predict(input_data)[0]
     prob = model.predict_proba(input_data)[0]
 
@@ -98,5 +102,4 @@ def predict_sms(text):
         "verdict": verdict,
         "confidence": round(float(confidence), 2),
         "reasons": _get_reasons(text, verdict),
-    }   
- 
+    }

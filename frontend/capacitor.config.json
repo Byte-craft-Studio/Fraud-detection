@@ -1,0 +1,5 @@
+{
+  "appId": "com.fraudshield.app",
+  "appName": "Fraud detect",
+  "webDir": "dist"
+}

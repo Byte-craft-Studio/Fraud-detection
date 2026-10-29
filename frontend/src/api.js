@@ -1,6 +1,15 @@
 const getBaseUrl = () => {
   const hostname = window.location.hostname;
-  return `http://${hostname === 'localhost' || hostname === '127.0.0.1' ? '172.32.117.194' : hostname}:8000`;
+  
+  // If running in local web development (e.g. localhost or local IP for testing)
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '172.32.117.194') {
+    // You can toggle this back to local IP if testing backend locally, 
+    // or point it directly to Render for cloud testing.
+    return 'https://fraud-detection-api-cbnq.onrender.com';
+  }
+  
+  // Default fallback for Capacitor native app & production web
+  return 'https://fraud-detection-api-cbnq.onrender.com';
 };
 
 const API_BASE = getBaseUrl();

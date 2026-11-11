@@ -83,7 +83,7 @@ function InputScreen({ message, setMessage, onScan, error, stats, mode, setMode 
     <div className="px-5 py-6 flex flex-col gap-5 animate-enter">
       <StatsStrip stats={stats} />
       <ModeSelector mode={mode} setMode={setMode} />
-      
+
       <div className="flex flex-col items-center text-center gap-3 py-2">
         <div className="w-14 h-14 rounded-2xl bg-safe-dim flex items-center justify-center">
           <ShieldCheck size={28} className="text-safe" />
@@ -127,8 +127,8 @@ function TransactionScreen({ onScanTransaction, error, stats, mode, setMode }) {
     amount: "",
     old_bal_org: "",
     new_bal_org: "",
-    old_bal_dest: "0",
-    new_bal_dest: "0",
+    old_bal_dest: "",
+    new_bal_dest: "",
     tx_type: "PAYMENT",
   });
 
@@ -187,9 +187,10 @@ function TransactionScreen({ onScanTransaction, error, stats, mode, setMode }) {
           />
         </div>
 
+        <p className="text-xs font-mono uppercase tracking-wide text-muted -mb-1">Origin account</p>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs font-mono uppercase tracking-wide text-muted mb-1 block">Old Balance (Origin)</label>
+            <label className="text-xs font-mono uppercase tracking-wide text-muted mb-1 block">Old Balance</label>
             <input
               type="number"
               placeholder="e.g. 10250"
@@ -199,12 +200,36 @@ function TransactionScreen({ onScanTransaction, error, stats, mode, setMode }) {
             />
           </div>
           <div>
-            <label className="text-xs font-mono uppercase tracking-wide text-muted mb-1 block">New Balance (Origin)</label>
+            <label className="text-xs font-mono uppercase tracking-wide text-muted mb-1 block">New Balance</label>
             <input
               type="number"
               placeholder="e.g. 5250"
               value={formData.new_bal_org}
               onChange={(e) => setFormData({ ...formData, new_bal_org: e.target.value })}
+              className="w-full bg-surface border border-line text-paper placeholder:text-muted/60 rounded-xl p-3 text-sm focus:outline-none focus:border-safe/40 font-mono"
+            />
+          </div>
+        </div>
+
+        <p className="text-xs font-mono uppercase tracking-wide text-muted -mb-1">Recipient account (leave as 0 if unknown)</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs font-mono uppercase tracking-wide text-muted mb-1 block">Old Balance</label>
+            <input
+              type="number"
+              placeholder="e.g. 0"
+              value={formData.old_bal_dest}
+              onChange={(e) => setFormData({ ...formData, old_bal_dest: e.target.value })}
+              className="w-full bg-surface border border-line text-paper placeholder:text-muted/60 rounded-xl p-3 text-sm focus:outline-none focus:border-safe/40 font-mono"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-mono uppercase tracking-wide text-muted mb-1 block">New Balance</label>
+            <input
+              type="number"
+              placeholder="e.g. 0"
+              value={formData.new_bal_dest}
+              onChange={(e) => setFormData({ ...formData, new_bal_dest: e.target.value })}
               className="w-full bg-surface border border-line text-paper placeholder:text-muted/60 rounded-xl p-3 text-sm focus:outline-none focus:border-safe/40 font-mono"
             />
           </div>
@@ -337,16 +362,16 @@ export default function App() {
   const [feedbackGiven, setFeedbackGiven] = useState(false);
   const [log, setLog] = useState(getFeedbackLog());
   const [stats, setStats] = useState(getStats());
-useEffect(() => {
-  const params = new URLSearchParams(window.location.search);
-  const shared = params.get("text") || params.get("title") || "";
-  if (shared) {
-    setMode("sms");
-    setMessage(shared);
-    window.history.replaceState({}, "", window.location.pathname);
-  }
-}, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shared = params.get("text") || params.get("title") || "";
+    if (shared) {
+      setMode("sms");
+      setMessage(shared);
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
 
   async function handleScanMessage() {
     setError(null);

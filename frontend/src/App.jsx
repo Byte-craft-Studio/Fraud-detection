@@ -337,6 +337,16 @@ export default function App() {
   const [feedbackGiven, setFeedbackGiven] = useState(false);
   const [log, setLog] = useState(getFeedbackLog());
   const [stats, setStats] = useState(getStats());
+useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const shared = params.get("text") || params.get("title") || "";
+  if (shared) {
+    setMode("sms");
+    setMessage(shared);
+    window.history.replaceState({}, "", window.location.pathname);
+  }
+}, []);
+
 
   async function handleScanMessage() {
     setError(null);

@@ -69,19 +69,30 @@ def predict_mpesa(amount, old_bal_org, new_bal_org, old_bal_dest, new_bal_dest, 
 _REASON_RULES = [
     (re.compile(r"\bpin\b|m-?pesa pin", re.I), "Asks for your M-Pesa PIN"),
     (re.compile(r"\botp\b|one.time.pass|verification code", re.I), "Asks for an OTP or verification code"),
-    (re.compile(r"urgent|act now|immediately|suspend|expire|24 ?hours?", re.I), "Uses urgency or threat language"),
+    (re.compile(r"urgent|act now|immediately|expire|24 ?hours?", re.I), "Uses urgency or threat language"),
+    (re.compile(r"suspend|block|deactivat|freeze", re.I), "Threatens to suspend, block, or freeze your account"),
     (re.compile(r"https?://|bit\.ly|tinyurl|www\.", re.I), "Contains a link"),
     (re.compile(r"won|prize|lottery|congratulations|selected", re.I), "Claims you've won a prize"),
     (re.compile(r"send.*money|deposit|fee|charge.*release", re.I), "Asks you to send money or pay a fee"),
+    (re.compile(r"safaricom|m-?pesa (customer care|support)|kra\b|central bank", re.I), "Claims to be from a known company, bank, or government agency"),
+    (re.compile(r"confirm (your|the) (account|details|identity)|update (your|the) (details|information|account)|verify (your|the) (account|identity)", re.I), "Asks you to confirm or update account details"),
+    (re.compile(r"click (here|below|the link)|tap (here|below)", re.I), "Pressures you to click or tap immediately"),
 ]
 
 
-def _get_reasons(text, verdict):
+def _get_reasons(text, verdict, confidence=None):
     reasons = [label for pattern, label in _REASON_RULES if pattern.search(text)]
     if verdict == "safe" and not reasons:
         return ["No urgency, PIN, OTP, or payment requests detected"]
     if not reasons:
-        return ["Flagged by the trained model based on message patterns"]
+        if confidence is not None:
+            pct = round(confidence * 100)
+            return [
+                f"The trained model rates this {pct}% likely to be a scam based on "
+                f"overall wording and structure, though it doesn't match any of our "
+                f"known red-flag phrases specifically"
+            ]
+        return ["Flagged by the trained model based on overall message patterns"]
     return reasons
 
 
@@ -101,5 +112,5 @@ def predict_sms(text):
     return {
         "verdict": verdict,
         "confidence": round(float(confidence), 2),
-        "reasons": _get_reasons(text, verdict),
+        "reasons": _get_reasons(text, verdict, confidence),
     }

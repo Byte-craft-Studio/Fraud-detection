@@ -52,4 +52,21 @@ def scan_transaction(req: TransactionRequest):
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    status = {"status": "ok", "sms_model": "unknown", "mpesa_model": "unknown"}
+    try:
+        from src.predict import _load_sms_model
+        _load_sms_model()
+        status["sms_model"] = "loaded"
+    except Exception as e:
+        status["sms_model"] = f"error: {e}"
+        status["status"] = "degraded"
+
+    try:
+        from src.predict import _load_mpesa_model
+        _load_mpesa_model()
+        status["mpesa_model"] = "loaded"
+    except Exception as e:
+        status["mpesa_model"] = f"error: {e}"
+        status["status"] = "degraded"
+
+    return status

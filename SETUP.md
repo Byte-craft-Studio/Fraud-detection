@@ -8,7 +8,6 @@ Fraud-detection/
   frontend/           React + Vite + Tailwind UI (frontend pair)
   src/                Python ML code (AI pair): predict.py, train.py, train_sms.py
   models/              trained .pkl files (gitignored, not in git)
-  app.py               Streamlit app (optional/backup UI)
   api_server.py        FastAPI wrapper exposing the models as JSON
   requirements.txt     Python dependencies
 
@@ -46,16 +45,24 @@ POST /scan
 Request:  { "message": "some SMS text" }
 Response: { "verdict": "safe|suspicious|scam", "confidence": 0.87, "reasons": ["..."] }
 
+POST /scan-transaction
+Request:  { "amount": 5000, "old_bal_org": 10000, "new_bal_org": 5000, "old_bal_dest": 0, "new_bal_dest": 5000, "tx_type": "PAYMENT" }
+Response: { "verdict": "safe|scam", "confidence": 0.87, "reasons": ["..."] }
+Note: tx_type must be one of PAYMENT, TRANSFER, CASH_OUT, CASH_IN; amount must be > 0 — invalid input returns 400 with a reason, unexpected server errors return 500.
+
+GET /health
+Response: { "status": "ok|degraded", "sms_model": "loaded|error: ...", "mpesa_model": "loaded|error: ..." }
+
 ## Common issues already hit
 
 - npm run dev gives 404: frontend/index.html is missing, or you ran the command outside frontend/.
 - Port 5173 or 8000 already in use: ss -tlnp | grep 5173 (or 8000), then kill -9 the PID shown, restart.
 - git push rejected (fetch first): git fetch origin, then git pull origin main --no-rebase, resolve conflicts, push again.
-- /scan returns 503 model not found: the .pkl files aren't in models/ on your machine — get them from the AI pair.
+- /scan or /scan-transaction returns 503 model not found: the .pkl files aren't in models/ on your machine — get them from the AI pair.
 - pip install fails externally-managed-environment: you're not inside the venv — run source venv/bin/activate first.
 
 ## Team
 
 - Frontend/UI: this pair — frontend/
-- AI/ML: src/, models/, app.py, api_server.py
-- Docs/Presentation: pull the architecture and API contract above into slides/writeup — the original Streamlit-only pitch is out of date.
+- AI/ML: src/, models/, api_server.py
+- Docs/Presentation: pull the architecture and API contract above into slides/writeup.

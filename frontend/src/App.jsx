@@ -211,13 +211,15 @@ function TransactionScreen({ onScanTransaction, error, stats, mode, setMode }) {
           </div>
         </div>
 
-        <p className="text-xs font-mono uppercase tracking-wide text-muted -mb-1">Recipient account (leave as 0 if unknown)</p>
+        <p className="text-xs font-mono uppercase tracking-wide text-muted -mb-1">
+          Recipient account (leave blank if unknown — the check will say so in its reasons)
+        </p>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-xs font-mono uppercase tracking-wide text-muted mb-1 block">Old Balance</label>
             <input
               type="number"
-              placeholder="e.g. 0"
+              placeholder="unknown"
               value={formData.old_bal_dest}
               onChange={(e) => setFormData({ ...formData, old_bal_dest: e.target.value })}
               className="w-full bg-surface border border-line text-paper placeholder:text-muted/60 rounded-xl p-3 text-sm focus:outline-none focus:border-safe/40 font-mono"
@@ -227,7 +229,7 @@ function TransactionScreen({ onScanTransaction, error, stats, mode, setMode }) {
             <label className="text-xs font-mono uppercase tracking-wide text-muted mb-1 block">New Balance</label>
             <input
               type="number"
-              placeholder="e.g. 0"
+              placeholder="unknown"
               value={formData.new_bal_dest}
               onChange={(e) => setFormData({ ...formData, new_bal_dest: e.target.value })}
               className="w-full bg-surface border border-line text-paper placeholder:text-muted/60 rounded-xl p-3 text-sm focus:outline-none focus:border-safe/40 font-mono"
@@ -238,7 +240,7 @@ function TransactionScreen({ onScanTransaction, error, stats, mode, setMode }) {
         {error && (
           <div className="flex items-center gap-2 px-1">
             <ShieldAlert size={14} className="text-scam shrink-0" />
-            <p className="text-sm text-scam">Couldn't verify transaction. Check backend connection.</p>
+            <p className="text-sm text-scam">{error}</p>
           </div>
         )}
 
@@ -357,6 +359,7 @@ export default function App() {
   const [view, setView] = useState("input");
   const [mode, setMode] = useState("sms");
   const [message, setMessage] = useState("");
+  const [transactionSummary, setTransactionSummary] = useState("");
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [feedbackGiven, setFeedbackGiven] = useState(false);
@@ -392,6 +395,9 @@ export default function App() {
   async function handleScanTransaction(transactionData) {
     setError(null);
     setView("loading");
+    setTransactionSummary(
+      `${transactionData.tx_type} of ${transactionData.amount} KES`
+    );
     try {
       const res = await scanTransaction(transactionData);
       recordScan(res);
@@ -400,19 +406,20 @@ export default function App() {
       setFeedbackGiven(false);
       setView("result");
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Couldn't verify transaction. Check backend connection.");
       setView("input");
     }
   }
 
   function handleNewScan() {
     setMessage("");
+    setTransactionSummary("");
     setResult(null);
     setView("input");
   }
 
   async function handleFeedback(actualVerdict) {
-    await submitFeedback({ message: message || "M-Pesa Transaction Verification", predicted: result.verdict, actual: actualVerdict });
+    await submitFeedback({ message: message || transactionSummary || "M-Pesa Transaction Verification", predicted: result.verdict, actual: actualVerdict });
     setLog(getFeedbackLog());
     setStats(getStats());
     setFeedbackGiven(true);
@@ -431,7 +438,7 @@ export default function App() {
           )}
           {view === "loading" && <LoadingScreen />}
           {view === "result" && result && (
-            <ResultScreen labelTitle={message || "Transaction Verification"} result={result} onNewScan={handleNewScan} onFeedback={handleFeedback} feedbackGiven={feedbackGiven} />
+            <ResultScreen labelTitle={message || transactionSummary || "Transaction Verification"} result={result} onNewScan={handleNewScan} onFeedback={handleFeedback} feedbackGiven={feedbackGiven} />
           )}
           {view === "log" && <FeedbackLog log={log} />}
         </div>
